@@ -42,8 +42,8 @@ class GAN_MODEL(DCGAN_MODEL):
 
                 # z = torch.randn((self.batch_size, 100, 1, 1))
                 z = torch.randn((self.batch_size, 1, 1, 100))
-                real_labels = torch.ones(self.batch_size)
-                fake_labels = torch.zeros(self.batch_size)
+                real_labels = torch.ones((self.batch_size, self.C))
+                fake_labels = torch.zeros((self.batch_size, self.C))
 
                 if self.cuda:
                     images, z = Variable(images).cuda(self.cuda_index), Variable(z).cuda(self.cuda_index)
@@ -61,9 +61,9 @@ class GAN_MODEL(DCGAN_MODEL):
 
                 # Fake Images
                 if self.cuda:
-                    z = Variable(torch.randn(self.batch_size, 1, 1, 100)).cuda(self.cuda_index)
+                    z = Variable(torch.randn(self.batch_size, self.C, 1, 100)).cuda(self.cuda_index)
                 else:
-                    z = Variable(torch.randn(self.batch_size, 1, 1, 100))
+                    z = Variable(torch.randn(self.batch_size, self.C, 1, 100))
 
                 fake_images = self.G(z)
                 outputs = self.D(fake_images)
@@ -79,9 +79,9 @@ class GAN_MODEL(DCGAN_MODEL):
                 # Compute loss with fake images
 
                 if self.cuda:
-                    z = Variable(torch.randn(self.batch_size, 1, 1, 100)).cuda(self.cuda_index)
+                    z = Variable(torch.randn(self.batch_size, self.C, 1, 100)).cuda(self.cuda_index)
                 else:
-                    z = Variable(torch.randn(self.batch_size, 1, 1, 100))
+                    z = Variable(torch.randn(self.batch_size, self.C, 1, 100))
 
                 fake_images = self.G(z)
                 outputs = self.D(fake_images)
@@ -108,7 +108,7 @@ class GAN_MODEL(DCGAN_MODEL):
                           ((epoch + 1), (i + 1), train_loader.dataset.__len__() // self.batch_size, discrim_loss, generator_loss))
 
                     # z = Variable(torch.randn(self.batch_size, 100).cuda(self.cuda_index))
-                    z = Variable(torch.randn(self.batch_size, 100).to(self.device))
+                    z = Variable(torch.randn(self.batch_size, self.C, 100).to(self.device))
 
                     # Logging. Uses SummaryWriter from Tensorboard.
                     # Not sure if this is correct...
@@ -144,7 +144,7 @@ class GAN_MODEL(DCGAN_MODEL):
                         os.makedirs('training_result_images/')
 
                     # Denormalize images and save them in grid 8x8
-                    z = Variable(torch.randn(self.batch_size, 100)).cuda(self.cuda_index)
+                    z = Variable(torch.randn(self.batch_size, self.C, 100)).cuda(self.cuda_index)
                     samples = self.G(z)
                     samples = torch.reshape(samples, [samples.shape[0], self.C, 32, 32])
                     samples = samples.mul(0.5).add(0.5)
@@ -157,3 +157,18 @@ class GAN_MODEL(DCGAN_MODEL):
         print('Time of training = {}'.format((self.t_end - self.t_begin)))
         # Save the trained parameters
         self.save_model()
+
+    def evaluate(self):
+        print(self.D_filename)
+        print(self.G_filename)
+        self.load_model()
+        # self.load_model(self.D_filename, self.G_filename)
+        # z = Variable(torch.randn(self.batch_size, 100, 1, 1)).cuda(self.cuda_index)
+        z = Variable(torch.randn(self.batch_size, self.C, 100).to(self.device))
+        samples = self.G(z)
+        samples = samples.mul(0.5).add(0.5)
+        samples = samples.data.cpu()
+        grid = tUtils.make_grid(samples)
+        grid = torch.reshape(grid, [grid.shape[0], self.C, 32, 32])
+        print("Grid of 8x8 images saved to {}].".format(self.img_filename))
+        tUtils.save_image(grid, self.img_filename)

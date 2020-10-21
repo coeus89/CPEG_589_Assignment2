@@ -198,15 +198,15 @@ class WGAN_PENALTY(DCGAN_MODEL):
         # Save the trained parameters
         self.save_model()
 
-    def evaluate(self, test_loader, D_model_path, G_model_path):
-        self.load_model(D_model_path, G_model_path)
-        z = self.get_torch_variable(torch.randn(self.batch_size, 100, 1, 1))
-        samples = self.G(z)
-        samples = samples.mul(0.5).add(0.5)
-        samples = samples.data.cpu()
-        grid = utils.make_grid(samples)
-        print("Grid of 8x8 images saved to 'WGAN_PENALTY_model_image.png'.")
-        utils.save_image(grid, 'WGAN_PENALTY_model_image.png')
+    # def evaluate(self, test_loader, D_model_path, G_model_path):
+    #     self.load_model(D_model_path, G_model_path)
+    #     z = self.get_torch_variable(torch.randn(self.batch_size, 100, 1, 1))
+    #     samples = self.G(z)
+    #     samples = samples.mul(0.5).add(0.5)
+    #     samples = samples.data.cpu()
+    #     grid = utils.make_grid(samples)
+    #     print("Grid of 8x8 images saved to 'WGAN_PENALTY_model_image.png'.")
+    #     utils.save_image(grid, 'WGAN_PENALTY_model_image.png')
 
 
     def calculate_gradient_penalty(self, real_images, fake_images):
